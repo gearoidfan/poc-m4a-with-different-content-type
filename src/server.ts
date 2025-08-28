@@ -117,17 +117,16 @@ app.use((err: unknown, _req: Request, res: Response, _next: Function) => {
 });
 
 async function bootstrap() {
-  const host = process.env.HOST || '127.0.0.1';
   const preferred = process.env.PORT ? Number(process.env.PORT) : 3000;
   let port = preferred;
   try {
-    port = await getPort({ port: preferred, host });
+    port = await getPort({ port: preferred });
   } catch {
     // Fallback when get-port cannot inspect interfaces in restricted sandboxes.
     port = 0; // Let the OS choose an ephemeral port
   }
-  app.listen(port, host, () => {
-    console.log(`Server running on http://${host}:${port}`);
+  app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
   });
 }
 
