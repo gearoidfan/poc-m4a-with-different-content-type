@@ -23,8 +23,8 @@ Getting Started
 4) Run (direct)
 - `npm start`
 
-The server binds to `127.0.0.1` and chooses a free port using `get-port`.
-Check the startup log for the exact URL, e.g. `Server running on http://127.0.0.1:3001`.
+The server chooses a free port using `get-port` and (without an explicit host) listens on all interfaces (0.0.0.0 / ::).
+Check the startup log for the exact URL, e.g. `Server running on http://0.0.0.0:3001` (you can also use your LAN IP for other devices).
 
 Project Notes
 - TypeScript runs via `tsx` (no separate build step required).
