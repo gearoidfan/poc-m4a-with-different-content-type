@@ -9,10 +9,10 @@ const projectRoot = path.resolve(process.cwd());
 const audioPath = path.join(projectRoot, 'resource', 'demo.m4a');
 const audioPathAAC = path.join(projectRoot, 'resource', 'demo-aac.m4a');
 
-function ensureAudioExists() {
-  if (!fs.existsSync(audioPath)) {
+function ensureAudioExists(audioPathToCheck: string) {
+  if (!fs.existsSync(audioPathToCheck)) {
     // Fail fast with a helpful message in English per requirement.
-    throw new Error(`Audio file not found at: ${audioPath}`);
+    throw new Error(`Audio file not found at: ${audioPathToCheck}`);
     }
   }
 
@@ -110,26 +110,50 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 app.get('/audio/m4a', (_req: Request, res: Response) => {
-  ensureAudioExists();
+  ensureAudioExists(audioPath);
   res.setHeader('Content-Type', 'audio/m4a');
   res.setHeader('Accept-Ranges', 'bytes');
   res.sendFile(audioPath);
 });
 
 app.get('/audio/octet', (_req: Request, res: Response) => {
-  ensureAudioExists();
+  ensureAudioExists(audioPath);
   res.setHeader('Content-Type', 'application/octet-stream');
   res.setHeader('Accept-Ranges', 'bytes');
   res.sendFile(audioPath);
 });
 
-app.get('/audio/m4a/aac', (_req: Request, res: Response) => {
-  ensureAudioExists();
-  res.setHeader('Content-Type', 'audio/m4a');
-  res.sendFile(audioPathAAC); 
+app.get('/audio/m4a/aac', (req, res) => {
+  const filePath = audioPathAAC;
+  ensureAudioExists(filePath);
+  const stat = fs.statSync(filePath);
+  const fileSize = stat.size;
+  const range = req.headers.range;
+
+  if (range) {
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+    const chunkSize = end - start + 1;
+    const stream = fs.createReadStream(filePath, { start, end });
+    res.writeHead(206, {
+      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunkSize,
+      'Content-Type': 'audio/m4a',
+    });
+    stream.pipe(res);
+  } else {
+    res.writeHead(200, {
+      'Content-Length': fileSize,
+      'Content-Type': 'audio/m4a',
+      'Accept-Ranges': 'bytes',
+    });
+    fs.createReadStream(filePath).pipe(res);
+  }
 });
 app.get('/audio/octet/aac', (_req: Request, res: Response) => {
-  ensureAudioExists();
+  ensureAudioExists(audioPathAAC);
   res.setHeader('Content-Type', 'application/octet-stream');
   res.setHeader('Accept-Ranges', 'bytes');
   res.sendFile(audioPathAAC);
