@@ -11,20 +11,48 @@ const audioPathAAC = path.join(projectRoot, 'resource', 'demo-aac.m4a');
 
 function ensureAudioExists(audioPathToCheck: string) {
   if (!fs.existsSync(audioPathToCheck)) {
-    // Fail fast with a helpful message in English per requirement.
     throw new Error(`Audio file not found at: ${audioPathToCheck}`);
-    }
   }
+}
+
+function serveAudio(req: Request, res: Response, filePath: string, contentType: string) {
+  ensureAudioExists(filePath);
+  const stat = fs.statSync(filePath);
+  const fileSize = stat.size;
+  const range = req.headers.range;
+
+  if (range) {
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+    const chunkSize = end - start + 1;
+    const stream = fs.createReadStream(filePath, { start, end });
+    res.writeHead(206, {
+      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunkSize,
+      'Content-Type': contentType,
+    });
+    stream.pipe(res);
+  } else {
+    res.writeHead(200, {
+      'Content-Length': fileSize,
+      'Content-Type': contentType,
+      'Accept-Ranges': 'bytes',
+    });
+    fs.createReadStream(filePath).pipe(res);
+  }
+}
 
 app.get('/', (_req: Request, res: Response) => {
   const html = `<!doctype html>
   <html lang="en">
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>M4A Content-Type Demo</title>
-      <style>
-        :root {
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>M4A Content-Type Demo</title>
+    <style>
+              :root {
           --bg: #0b0f14;
           --panel: #101722;
           --text: #d7e1f0;
@@ -69,96 +97,50 @@ app.get('/', (_req: Request, res: Response) => {
         footer { margin-top: 18px; font-size: 12px; color: var(--muted); }
         code { color: #b6d7ff; }
         .note { margin-top: 6px; font-size: 12px; color: var(--muted); }
-      </style>
-    </head>
-    <body>
-      <main class="wrap">
-        <header>
-          <h1>M4A Content-Type Playback Test</h1>
-          <p>Two players stream the same file with different <code>Content-Type</code>s.</p>
-        </header>
-        <section class="grid">
-          <div class="card">
-            <div class="label">Standard: <code>audio/m4a</code></div>
-            <audio controls preload="none" src="/audio/m4a"></audio>
-            <div class="note">Endpoint: <code>GET /audio/m4a</code></div>
-          </div>
-          <div class="card">
-            <div class="label">Standard: <code>audio/m4a/aac</code></div>
-            <audio controls preload="none" src="/audio/m4a/aac"></audio>
-            <div class="note">Endpoint: <code>GET /audio/m4a/aac</code></div>
-          </div>
-          <div class="card">
-            <div class="label">Generic: <code>application/octet-stream</code></div>
-            <audio controls preload="none" src="/application/octet"></audio>
-            <div class="note">Endpoint: <code>GET /application/octet</code></div>
-          </div>
-          <div class="card">
-            <div class="label">Generic: <code>application/octet-stream/aac</code></div>
-            <audio controls preload="none" src="/audio/octet/aac"></audio>
-            <div class="note">Endpoint: <code>GET /audio/octet/aac</code></div>
-          </div>
-          
-        </section>
-        <footer>
-          Tip: Try this on different devices/browsers to compare behavior.
-        </footer>
-      </main>
-    </body>
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header>
+        <h1>M4A Content-Type Playback Test</h1>
+        <p>Two players stream the same file with different <code>Content-Type</code>s.</p>
+      </header>
+      <section class="grid">
+        <div class="card">
+          <div class="label">Standard: <code>audio/m4a</code></div>
+          <audio controls preload="none" src="/audio/m4a"></audio>
+          <div class="note">Endpoint: <code>GET /audio/m4a</code></div>
+        </div>
+        <div class="card">
+          <div class="label">Standard: <code>audio/m4a/aac</code></div>
+          <audio controls preload="none" src="/audio/m4a/aac"></audio>
+          <div class="note">Endpoint: <code>GET /audio/m4a/aac</code></div>
+        </div>
+        <div class="card">
+          <div class="label">Generic: <code>application/octet-stream</code></div>
+          <audio controls preload="none" src="/application/octet"></audio>
+          <div class="note">Endpoint: <code>GET /application/octet</code></div>
+        </div>
+        <div class="card">
+          <div class="label">Generic: <code>application/octet-stream/aac</code></div>
+          <audio controls preload="none" src="/application/octet/aac"></audio>
+          <div class="note">Endpoint: <code>GET /application/octet/aac</code></div>
+        </div>
+      </section>
+      <footer>
+        Tip: Try this on different devices/browsers to compare behavior.
+      </footer>
+    </main>
+  </body>
   </html>`;
   res.status(200).type('html').send(html);
 });
 
-app.get('/audio/m4a', (_req: Request, res: Response) => {
-  ensureAudioExists(audioPath);
-  res.setHeader('Content-Type', 'audio/m4a');
-  res.setHeader('Accept-Ranges', 'bytes');
-  res.sendFile(audioPath);
-});
-
-app.get('/audio/octet', (_req: Request, res: Response) => {
-  ensureAudioExists(audioPath);
-  res.setHeader('Content-Type', 'application/octet-stream');
-  res.setHeader('Accept-Ranges', 'bytes');
-  res.sendFile(audioPath);
-});
-
-app.get('/audio/m4a/aac', (req, res) => {
-  const filePath = audioPathAAC;
-  ensureAudioExists(filePath);
-  const stat = fs.statSync(filePath);
-  const fileSize = stat.size;
-  const range = req.headers.range;
-
-  if (range) {
-    const parts = range.replace(/bytes=/, '').split('-');
-    const start = parseInt(parts[0], 10);
-    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-    const chunkSize = end - start + 1;
-    const stream = fs.createReadStream(filePath, { start, end });
-    res.writeHead(206, {
-      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-      'Accept-Ranges': 'bytes',
-      'Content-Length': chunkSize,
-      'Content-Type': 'audio/m4a',
-    });
-    stream.pipe(res);
-  } else {
-    res.writeHead(200, {
-      'Content-Length': fileSize,
-      'Content-Type': 'audio/m4a',
-      'Accept-Ranges': 'bytes',
-    });
-    fs.createReadStream(filePath).pipe(res);
-  }
-});
-app.get('/audio/octet/aac', (_req: Request, res: Response) => {
-  ensureAudioExists(audioPathAAC);
-  res.setHeader('Content-Type', 'application/octet-stream');
-  res.setHeader('Accept-Ranges', 'bytes');
-  res.sendFile(audioPathAAC);
-});
-
+// 四個 endpoint 全部改成 Range-safe
+app.get('/audio/m4a', (req, res) => serveAudio(req, res, audioPath, 'audio/m4a'));
+app.get('/audio/m4a/aac', (req, res) => serveAudio(req, res, audioPathAAC, 'audio/m4a'));
+app.get('/application/octet', (req, res) => serveAudio(req, res, audioPath, 'application/octet-stream'));
+app.get('/application/octet/aac', (req, res) => serveAudio(req, res, audioPathAAC, 'application/octet-stream'));
 
 app.use((err: unknown, _req: Request, res: Response, _next: Function) => {
   const message = err instanceof Error ? err.message : 'Unknown error';
@@ -171,11 +153,10 @@ async function bootstrap() {
   try {
     port = await getPort({ port: preferred });
   } catch {
-    // Fallback when get-port cannot inspect interfaces in restricted sandboxes.
-    port = 0; // Let the OS choose an ephemeral port
+    port = 0;
   }
   app.listen(port, () => {
-    console.log(`Server running on http://0.0.0.0:${port}`);
+    console.log(`Server running on http://localhost:${port}`);
   });
 }
 
