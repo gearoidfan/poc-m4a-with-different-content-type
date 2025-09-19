@@ -137,8 +137,8 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 // 四個 endpoint 全部改成 Range-safe
-app.get('/audio/m4a', (req, res) => serveAudio(req, res, audioPath, 'audio/m4a'));
-app.get('/audio/m4a/aac', (req, res) => serveAudio(req, res, audioPathAAC, 'audio/m4a'));
+app.get('/audio/m4a', (req, res) => serveAudio(req, res, audioPath, 'audio/mp4'));
+app.get('/audio/m4a/aac', (req, res) => serveAudio(req, res, audioPathAAC, 'audio/mp4'));
 app.get('/application/octet', (req, res) => serveAudio(req, res, audioPath, 'application/octet-stream'));
 app.get('/application/octet/aac', (req, res) => serveAudio(req, res, audioPathAAC, 'application/octet-stream'));
 
