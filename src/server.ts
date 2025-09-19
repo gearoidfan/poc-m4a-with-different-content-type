@@ -84,15 +84,21 @@ app.get('/', (_req: Request, res: Response) => {
             <div class="note">Endpoint: <code>GET /audio/m4a</code></div>
           </div>
           <div class="card">
-            <div class="label">Generic: <code>application/octet-stream</code></div>
+            <div class="label">Standard: <code>audio/m4a/aac</code></div>
             <audio controls preload="none" src="/audio/m4a/aac"></audio>
             <div class="note">Endpoint: <code>GET /audio/m4a/aac</code></div>
           </div>
           <div class="card">
             <div class="label">Generic: <code>application/octet-stream</code></div>
-            <audio controls preload="none" src="/audio/octet"></audio>
-            <div class="note">Endpoint: <code>GET /audio/octet</code></div>
+            <audio controls preload="none" src="/application/octet"></audio>
+            <div class="note">Endpoint: <code>GET /application/octet</code></div>
           </div>
+          <div class="card">
+            <div class="label">Generic: <code>application/octet-stream/aac</code></div>
+            <audio controls preload="none" src="/audio/octet/aac"></audio>
+            <div class="note">Endpoint: <code>GET /audio/octet/aac</code></div>
+          </div>
+          
         </section>
         <footer>
           Tip: Try this on different devices/browsers to compare behavior.
@@ -120,6 +126,12 @@ app.get('/audio/octet', (_req: Request, res: Response) => {
 app.get('/audio/m4a/aac', (_req: Request, res: Response) => {
   ensureAudioExists();
   res.setHeader('Content-Type', 'audio/m4a');
+  res.setHeader('Accept-Ranges', 'bytes');
+  res.sendFile(audioPathAAC);
+});
+app.get('/audio/octet/aac', (_req: Request, res: Response) => {
+  ensureAudioExists();
+  res.setHeader('Content-Type', 'application/octet-stream');
   res.setHeader('Accept-Ranges', 'bytes');
   res.sendFile(audioPathAAC);
 });
