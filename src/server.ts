@@ -7,13 +7,14 @@ const app = express();
 
 const projectRoot = path.resolve(process.cwd());
 const audioPath = path.join(projectRoot, 'resource', 'demo.m4a');
+const audioPathAAC = path.join(projectRoot, 'resource', 'demo-aac.m4a');
 
 function ensureAudioExists() {
   if (!fs.existsSync(audioPath)) {
     // Fail fast with a helpful message in English per requirement.
     throw new Error(`Audio file not found at: ${audioPath}`);
+    }
   }
-}
 
 app.get('/', (_req: Request, res: Response) => {
   const html = `<!doctype html>
@@ -84,6 +85,11 @@ app.get('/', (_req: Request, res: Response) => {
           </div>
           <div class="card">
             <div class="label">Generic: <code>application/octet-stream</code></div>
+            <audio controls preload="none" src="/audio/m4a/aac"></audio>
+            <div class="note">Endpoint: <code>GET /audio/m4a/aac</code></div>
+          </div>
+          <div class="card">
+            <div class="label">Generic: <code>application/octet-stream</code></div>
             <audio controls preload="none" src="/audio/octet"></audio>
             <div class="note">Endpoint: <code>GET /audio/octet</code></div>
           </div>
@@ -111,6 +117,14 @@ app.get('/audio/octet', (_req: Request, res: Response) => {
   res.sendFile(audioPath);
 });
 
+app.get('/audio/m4a/aac', (_req: Request, res: Response) => {
+  ensureAudioExists();
+  res.setHeader('Content-Type', 'audio/m4a');
+  res.setHeader('Accept-Ranges', 'bytes');
+  res.sendFile(audioPathAAC);
+});
+
+
 app.use((err: unknown, _req: Request, res: Response, _next: Function) => {
   const message = err instanceof Error ? err.message : 'Unknown error';
   res.status(500).json({ error: message });
@@ -126,7 +140,7 @@ async function bootstrap() {
     port = 0; // Let the OS choose an ephemeral port
   }
   app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+    console.log(`Server running on http://0.0.0.0:${port}`);
   });
 }
 
