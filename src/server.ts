@@ -126,8 +126,7 @@ app.get('/audio/octet', (_req: Request, res: Response) => {
 app.get('/audio/m4a/aac', (_req: Request, res: Response) => {
   ensureAudioExists();
   res.setHeader('Content-Type', 'audio/m4a');
-  res.setHeader('Accept-Ranges', 'bytes');
-  res.sendFile(audioPathAAC);
+  res.sendFile(audioPathAAC); 
 });
 app.get('/audio/octet/aac', (_req: Request, res: Response) => {
   ensureAudioExists();
