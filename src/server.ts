@@ -97,6 +97,31 @@ app.get('/', (_req: Request, res: Response) => {
         footer { margin-top: 18px; font-size: 12px; color: var(--muted); }
         code { color: #b6d7ff; }
         .note { margin-top: 6px; font-size: 12px; color: var(--muted); }
+        .download-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 12px;
+          background: rgba(255,255,255,0.05);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          color: var(--text);
+          text-decoration: none;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .download-btn:hover {
+          background: rgba(255,255,255,0.1);
+          text-decoration: underline;
+        }
+        .error-message {
+          display: none;
+          color: var(--muted);
+          font-size: 12px;
+          margin-top: 8px;
+        }
     </style>
   </head>
   <body>
@@ -108,22 +133,57 @@ app.get('/', (_req: Request, res: Response) => {
       <section class="grid">
         <div class="card">
           <div class="label">Standard: <code>audio/m4a</code></div>
-          <audio controls preload="none" src="/audio/m4a"></audio>
+          <audio controls preload="none" src="/audio/m4a" onerror="handleAudioError(this)"></audio>
+          <div class="error-message">
+            Audio playback failed.
+            <a class="download-btn" href="/audio/m4a" download="demo.m4a">
+              📎 Download Audio File
+            </a>
+          </div>
           <div class="note">Endpoint: <code>GET /audio/m4a</code></div>
         </div>
         <div class="card">
           <div class="label">Standard: <code>audio/m4a/aac</code></div>
-          <audio controls preload="none" src="/audio/m4a/aac"></audio>
+          <audio controls preload="none" src="/audio/m4a/aac" onerror="handleAudioError(this)"></audio>
+          <div class="error-message">
+            Audio playback failed.
+            <a class="download-btn" href="/audio/m4a/aac" download="demo-aac.m4a">
+              📎 Download Audio File
+            </a>
+          </div>
           <div class="note">Endpoint: <code>GET /audio/m4a/aac</code></div>
         </div>
         <div class="card">
+          <div class="label">Standard: <code>audio/m4a/mp4</code></div>
+          <audio controls preload="none" src="/audio/m4a/mp4" onerror="handleAudioError(this)"></audio>
+          <div class="error-message">
+            Audio playback failed.
+            <a class="download-btn" href="/audio/m4a/mp4" download="demo-aac.m4a">
+              📎 Download Audio File
+            </a>
+          </div>
+          <div class="note">Endpoint: <code>GET /audio/m4a/mp4</code></div>
+        </div>
+        <div class="card">
           <div class="label">Generic: <code>application/octet-stream</code></div>
-          <audio controls preload="none" src="/application/octet"></audio>
+          <audio controls preload="none" src="/application/octet" onerror="handleAudioError(this)"></audio>
+          <div class="error-message">
+            Audio playback failed.
+            <a class="download-btn" href="/application/octet" download="demo.m4a">
+              📎 Download Audio File
+            </a>
+          </div>
           <div class="note">Endpoint: <code>GET /application/octet</code></div>
         </div>
         <div class="card">
           <div class="label">Generic: <code>application/octet-stream/aac</code></div>
-          <audio controls preload="none" src="/application/octet/aac"></audio>
+          <audio controls preload="none" src="/application/octet/aac" onerror="handleAudioError(this)"></audio>
+          <div class="error-message">
+            Audio playback failed.
+            <a class="download-btn" href="/application/octet/aac" download="demo-aac.m4a">
+              📎 Download Audio File
+            </a>
+          </div>
           <div class="note">Endpoint: <code>GET /application/octet/aac</code></div>
         </div>
       </section>
@@ -138,7 +198,8 @@ app.get('/', (_req: Request, res: Response) => {
 
 // 四個 endpoint 全部改成 Range-safe
 app.get('/audio/m4a', (req, res) => serveAudio(req, res, audioPath, 'audio/mp4'));
-app.get('/audio/m4a/aac', (req, res) => serveAudio(req, res, audioPathAAC, 'audio/mp4'));
+app.get('/audio/m4a/mp4', (req, res) => serveAudio(req, res, audioPathAAC, 'audio/mp4'));
+app.get('/audio/m4a/aac', (req, res) => serveAudio(req, res, audioPathAAC, 'audio/aac'));
 app.get('/application/octet', (req, res) => serveAudio(req, res, audioPath, 'application/octet-stream'));
 app.get('/application/octet/aac', (req, res) => serveAudio(req, res, audioPathAAC, 'application/octet-stream'));
 
