@@ -174,7 +174,7 @@ app.get('/', (_req: Request, res: Response) => {
             </a>
           </div>
           <div class="note">Endpoint: <code>GET /application/octet</code></div>
-        </div>
+        </div> 
         <div class="card">
           <div class="label">Generic: <code>application/octet-stream/aac</code></div>
           <audio controls preload="none" src="/application/octet/aac" onerror="handleAudioError(this)"></audio>
@@ -191,6 +191,17 @@ app.get('/', (_req: Request, res: Response) => {
         Tip: Try this on different devices/browsers to compare behavior.
       </footer>
     </main>
+    <script>
+      function handleAudioError(audioElement) {
+        const card = audioElement.closest('.card');
+        if (card) {
+          const errorMessage = card.querySelector('.error-message');
+          if (errorMessage) {
+            errorMessage.style.display = 'block';
+          }
+        }
+      }
+    </script>
   </body>
   </html>`;
   res.status(200).type('html').send(html);
